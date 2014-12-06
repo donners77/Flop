@@ -25,20 +25,20 @@
 					  from baz in Find (list, "baz")
 					  select Tuple.Create (foo, baz);
 
-			Check.AreEqual (res, Tuple.Create ("foo", "baz"));
+			Check.AreEqual(res, Tuple.Create ("foo", "baz"));
 
 			res = from foo in Find (list, "foo")
 				  from biz in Find (list, "biz")
 				  select Tuple.Create (foo, biz);
 
-			Check.IsFalse (res.HasValue);
+			Check.IsFalse (res.IsSome);
 
 			res = from foo in Find (list, "foo")
 				  from bar in Find (list, "bar")
 				  where bar.Length > 3
 				  select Tuple.Create (foo, bar);
 
-			Check.IsFalse (res.HasValue);
+			Check.IsFalse (res.IsSome);
 		}
 	}
 }

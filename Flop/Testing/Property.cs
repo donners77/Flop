@@ -126,7 +126,7 @@
 				var res = prop (state);
 				var cl = classify (res.Item2).ToString ();
 				var cnt = state.Classes.TryGetValue (cl);
-				state.Classes = cnt.HasValue ?
+				state.Classes = cnt.IsSome ?
 					state.Classes.Replace (cl, cnt.Value + 1) :
 					state.Classes.Add (cl, 1);
 				return res;

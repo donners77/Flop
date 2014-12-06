@@ -139,7 +139,7 @@
 		{
 			return from sign in Char ('-').Optional ()
 				   from number in PositiveInteger ()
-				   select sign.HasValue ? -number : number;
+				   select sign.IsSome ? -number : number;
 		}
 
 		/// <summary>

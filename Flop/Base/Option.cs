@@ -1,49 +1,72 @@
-﻿namespace Flop
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+
+namespace Flop
 {
-	using System;
+    /// <summary>
+    /// Option is similar to the <see cref="Nullable"/> type found in the System namespace, but has one important 
+    /// difference: it can encapsulate both reference and value types while Nullable can contain only value types. 
+    /// In other words, Nullable has the struct restriction on its generic type parameter. Option will work with any type. 
+    /// </summary>
+    /// <typeparam name="T">Type of the encapsulated value.</typeparam>
+    public struct Option<T> : IOptionalValue, IEnumerable<T>
+    {
+        // Fields
+        private readonly T _value;
+        private readonly bool _isSome;
 
-	/// <summary>
-	/// Option is similar to the <see cref="Nullable{T}"/> type found in the System namespace, but has one important 
-	/// difference: it can encapsulate both reference and value types while Nullable can contain only value types. 
-	/// In other words, Nullable has the struct restriction on its generic type parameter. Option will work with any type. 
-	/// </summary>
-	/// <typeparam name="T">Type of the encapsulated value.</typeparam>
-	public struct Option<T>
-	{
-		private readonly T _value;
-			
-		public readonly bool HasValue;
+        // Constructor
+        public Option(T value) : this(value, value != null) { }
 
-		/// <summary>
-		/// Return the encapsulated value. Throws an exception if value is not assigned.
-		/// </summary>
-		public T Value
-		{
-			get
-			{
-				if (HasValue)
-					return _value;
-				throw new InvalidOperationException ("Option has no value.");
-			}
-		}
+        private Option(T value, bool isSome)
+        {
+            _isSome = isSome;
+            _value = value;
+        }
 
-		/// <summary>
-		/// Create an option type with value.
-		/// </summary>
-		public Option(T value)
-		{
-			HasValue = true;
-			_value = value;
-		}
+        // Properties
+        public bool IsSome { get { return _isSome; } }
+        public bool IsNone { get { return !IsSome; } }
+        public int Count { get { return IsSome ? 1 : 0; } }
 
-		/// <summary>
-		/// Convert Option automatically to its encapsulated value-
-		/// </summary>
-		public static implicit operator T (Option<T> option)
-		{
-			return option.Value;
-		}
+        public T Value { get { if (IsSome) return _value; throw new InvalidOperationException("Option has no value."); } }
+
+        // Methods
+        public override string ToString() { return IsSome ? Value == null ? "Some(null)" : String.Format("Some({0})", Value) : "None"; }
+        public override int GetHashCode() { return IsSome && Value != null ? Value.GetHashCode() : 0; }
+        public override bool Equals(object obj) { return IsSome && Value != null ? Value.Equals(obj) : false; }
+
+        public bool ForAll(Func<T,bool> pred) { return !IsSome || pred(Value); }
+        public S Fold<S>(S state, Func<S, T, S> folder) { return IsSome ? folder(state, Value) : state; }
+        public bool Exists(Func<T, bool> pred) { return IsSome && pred(Value); }
+        public bool Filter(Func<T, bool> pred) { return Exists(pred); }
+        public Option<R> Bind<R>(Func<T, Option<R>> binder) { return IsSome ? binder(Value) : Option<R>.None; }
+
+        // Implemenation of IEnumerable<T>
+        public IEnumerable<T> AsEnumerable() { if (IsSome) yield return Value; }
+        public IEnumerator<T> GetEnumerator() { return AsEnumerable().GetEnumerator(); }
+	    IEnumerator IEnumerable.GetEnumerator() { return AsEnumerable().GetEnumerator(); }
+
+        // Static
+        public static Option<T> Some(T value) { return new Option<T>(value); }
+        public static readonly Option<T> None = new Option<T>(default(T), false);
+
+        public static implicit operator T(Option<T> option) { return option.Value; }
+        public static implicit operator Option<T>(T value) { return value == null ? None : Some(value); }
+        public static implicit operator Option<T>(OptionNone none) { return None; }
 	}
+
+    public interface IOptionalValue
+    {
+        bool IsSome { get; }
+        bool IsNone { get; }
+    }
+
+    public struct OptionNone
+    {
+        public static OptionNone Default = new OptionNone();
+    }
 
 	/// <summary>
 	/// Implement monadic extension methods for Option{T}
@@ -71,7 +94,7 @@
 		/// </summary>
 		public static Option<U> Bind<T, U> (this Option<T> option, Func<T, Option<U>> func)
 		{
-			return option.HasValue ? func (option.Value) : new Option<U> ();
+			return option.IsSome ? func (option.Value) : new Option<U> ();
 		}
 
 		/// <summary>
@@ -96,7 +119,7 @@
 		/// </summary>
 		public static Option<T> Where<T> (this Option<T> option, Func<T, bool> predicate)
 		{
-			return option.HasValue && predicate (option.Value) ? option : new Option<T> ();
+			return option.IsSome && predicate (option.Value) ? option : new Option<T> ();
 		}
 	}
 }
