@@ -25,6 +25,12 @@ namespace Flop
             _value = value;
         }
 
+        private Option(bool isSome = false)
+        {
+            _isSome = isSome;
+            _value = null;
+        }
+
         // Properties
         public bool IsSome { get { return _isSome; } }
         public bool IsNone { get { return !IsSome; } }
@@ -50,9 +56,9 @@ namespace Flop
 
         // Static
         public static Option<T> Some(T value) { return new Option<T>(value); }
-        public static readonly Option<T> None = new Option<T>(default(T), false);
+        public static readonly Option<T> None = new Option<T>();
 
-        public static implicit operator T(Option<T> option) { return option.Value; }
+        public static explicit operator T(Option<T> option) { return option.Value; } // warning: may result in a null being returned 
         public static implicit operator Option<T>(T value) { return value == null ? None : Some(value); }
         public static implicit operator Option<T>(OptionNone none) { return None; }
 	}

@@ -25,7 +25,7 @@
 					  from baz in Find (list, "baz")
 					  select Tuple.Create (foo, baz);
 
-			Check.AreEqual(res, Tuple.Create ("foo", "baz"));
+			Check.AreEqual(res.Value, Tuple.Create ("foo", "baz"));
 
 			res = from foo in Find (list, "foo")
 				  from biz in Find (list, "biz")
